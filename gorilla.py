@@ -61,6 +61,17 @@ def pretty_print_2D_array(A):
             print(A[i][j], end=" ")
         print()
 
+def print2DarrayWithLabels(A, x, y):
+    print(" ", end=" ")
+    for i in range(len(x)):
+        print(x[i], end=" ")
+    print()
+    for i in range(len(A)):
+        print(y[i], end="  ")
+        for j in range(len(A[i])):
+            print(A[i][j], end=" ")
+        print()
+
 def start_solve(x, y):
     # to be implemented
     # if x
@@ -71,21 +82,26 @@ def solve(x, y):
     A = [[0 for _ in range(len(x))] for _ in range(len(y))]
     # B = [[0]*len(x)] * len(y)
     for i in range(len(y)):
-        A[i][0] = lookup_blosum(x[0], y[i])
+        # A[i][0] = lookup_blosum(x[0], y[i])
+        A[i][0] = HYPHEN_COST
 
     for j in range(len(x)):
-        A[0][j] = lookup_blosum(x[j], y[0])
+        # A[0][j] = lookup_blosum(x[j], y[0])
+        A[0][j] = HYPHEN_COST
 
     pretty_print_2D_array(A)
 
-    for j in range(1, len(y)):
-        for i in range(1, len(x)):
-            take   = lookup_blosum(y[j], x[i]) + A[i-1][j-1]
-            drop_i = HYPHEN_COST + A[i-1][j]
-            drop_j = HYPHEN_COST + A[i][j-1]
-            A[i][j] = max(take, drop_i, drop_j)
-            
-    return A[len(x),len(y)]
+    for row in range(1, len(y)):
+        for col in range(1, len(x)):
+            take   = lookup_blosum(y[row], x[col]) + A[row-1][col-1]
+            drop_i = HYPHEN_COST + A[row-1][col]
+            drop_j = HYPHEN_COST + A[row][col-1]
+            A[row][col] = max(take, drop_i, drop_j)
+    
+    print("\nAfter solve:")
+    print2DarrayWithLabels(A, x, y)
+
+    return A[len(y)-1][len(x)-1]
 
 if __name__ == "__main__":
     main()
