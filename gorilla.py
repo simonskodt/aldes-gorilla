@@ -74,7 +74,7 @@ def print2DarrayWithLabels(A, x, y):
 
 def start_solve(x, y):
     # to be implemented
-    # if x
+    # if x < y 
     return 0
 
 def solve(x, y):
