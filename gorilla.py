@@ -1,7 +1,5 @@
 import sys
 
-# Key: name of type of dna, value: respective dna sequence
-dnaMap = {}
 # Keys are the different DNA-types and blosum is the cost combinations
 keys, blosum = [], []
 HYPHEN_COST = -4
@@ -17,23 +15,30 @@ def main():
 
     # Parse data
     load_blosum()    
-    data = data.split(">")
+    dna_map = load_dna_data(data)
     
+    solve_and_print_dna_map(dna_map)
+def load_dna_data(data):
+    data = data.split(">")
+    dna_map = {}
+
     for i in range(1, len(data)):
         dna = data[i].split("\n")
-        dnaMap[dna[0].strip()] = "".join(dna[1:])
-    
-    # To-do: Change format of print
+        key = dna[0].split()[0].strip()
+        dna_map[key] = "".join(dna[1:])
+
+    return dna_map
+
+def solve_and_print_dna_map(dna_map):
     seen_keys = []
-    for i_key in dnaMap:
-        for j_key in dnaMap:
-            if i_key == j_key or (i_key in seen_keys) or (j_key in seen_keys):
+    for i_key in dna_map:
+        for j_key in dna_map:
+            if i_key == j_key or (j_key in seen_keys):
                continue
             else:
-                result = initiate_solve(dnaMap[i_key], dnaMap[j_key])
-                print(dnaMap[i_key] + "--" + dnaMap[j_key]+ ": " + str(result[0]))
-                print(result[1])
-        
+                match_result = initiate_solve(dna_map[i_key], dna_map[j_key])
+                print(f"{i_key}--{j_key}: {str(match_result[0])}")
+                print(f"{match_result[1][0]}\n{match_result[1][1]}")
         seen_keys.append(i_key)
 
 def load_blosum():
