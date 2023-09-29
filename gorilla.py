@@ -41,7 +41,7 @@ def backtrack(alignment, dna_sequence_x, dna_sequence_y):
     global HYPHEN_COST
 
     backtrack_dna_sequence_x = ""
-    backtrack_dna_sequece_y = ""
+    backtrack_dna_sequence_y = ""
 
     row = len(dna_sequence_y)
     col = len(dna_sequence_x)
@@ -54,19 +54,19 @@ def backtrack(alignment, dna_sequence_x, dna_sequence_y):
         
         if blosum_cost(dna_sequence_y[row-1], dna_sequence_x[col-1]) + v_take == v:
             backtrack_dna_sequence_x += dna_sequence_x[col-1]
-            backtrack_dna_sequece_y += dna_sequence_y[row-1]
+            backtrack_dna_sequence_y += dna_sequence_y[row-1]
             row -= 1
             col -= 1
         elif v_drop_i + HYPHEN_COST == v:      
             backtrack_dna_sequence_x += "-"
-            backtrack_dna_sequece_y += dna_sequence_y[row-1]
+            backtrack_dna_sequence_y += dna_sequence_y[row-1]
             row -= 1
         else: # v_drop_j
             backtrack_dna_sequence_x += dna_sequence_x[col-1]
-            backtrack_dna_sequece_y += "-"
+            backtrack_dna_sequence_y += "-"
             col -= 1
     
-    return backtrack_dna_sequence_x[::-1], backtrack_dna_sequece_y[::-1]
+    return backtrack_dna_sequence_x[::-1], backtrack_dna_sequence_y[::-1]
 
 def initiate_solve(dna_sequence_x, dna_sequence_y):
     if dna_sequence_x < dna_sequence_y: 
@@ -94,7 +94,7 @@ def solve_and_print_dna_map(dna_map):
                 # initiate_solve returns a tuple - (match_score,(backtrack_x,backtrack_y))
                 alignment_result = initiate_solve(dna_map[i_key], dna_map[j_key])
                 print(f"{i_key}--{j_key}: {str(alignment_result[0])}")
-                print(f"{alignment_result[1][0]}\n{alignment_result[1][1]}")
+                print(f"{alignment_result[1][1]}\n{alignment_result[1][0]}")
         seen_keys.append(i_key)
 
 def load_blosum():
