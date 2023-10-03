@@ -1,7 +1,5 @@
 import sys
 
-# Key: name of type of dna, value: respective dna sequence
-dnaMap = {}
 # Keys are the different DNA-types and blosum is the cost combinations
 keys, blosum = [], []
 HYPHEN_COST = -4
@@ -17,23 +15,86 @@ def main():
 
     # Parse data
     load_blosum()    
-    data = data.split(">")
+    dna_map = load_dna_data(data)
     
+    solve_and_print_dna_map(dna_map)
+
+def solve(dna_sequence_x, dna_sequence_y):
+    # initialiase 2-d array - tabulation for storing solutions to subproblems 
+    alignment = [[0 for _ in range(len(dna_sequence_x)+1)] for _ in range(len(dna_sequence_y)+1)]
+    for i in range(len(dna_sequence_y)+1):
+        alignment[i][0] = HYPHEN_COST * i
+
+    for j in range(len(dna_sequence_x)+1):
+        alignment[0][j] = HYPHEN_COST * j
+
+    for row in range(1, len(dna_sequence_y)+1):
+        for col in range(1, len(dna_sequence_x)+1):
+            take   = blosum_cost(dna_sequence_y[row-1], dna_sequence_x[col-1]) + alignment[row-1][col-1]
+            drop_i = HYPHEN_COST + alignment[row-1][col]
+            drop_j = HYPHEN_COST + alignment[row][col-1]
+            alignment[row][col] = max(take, drop_i, drop_j)
+
+    return alignment[len(dna_sequence_y)][len(dna_sequence_x)], backtrack(alignment, dna_sequence_x, dna_sequence_y)
+
+def backtrack(alignment, dna_sequence_x, dna_sequence_y):
+    global HYPHEN_COST
+
+    backtrack_dna_sequence_x = ""
+    backtrack_dna_sequence_y = ""
+
+    row = len(dna_sequence_y)
+    col = len(dna_sequence_x)
+
+    while (row > 0 or col > 0):
+
+        v = alignment[row][col]
+        v_take = alignment[row-1][col-1]
+        v_drop_i = alignment[row-1][col]
+        
+        if blosum_cost(dna_sequence_y[row-1], dna_sequence_x[col-1]) + v_take == v:
+            backtrack_dna_sequence_x += dna_sequence_x[col-1]
+            backtrack_dna_sequence_y += dna_sequence_y[row-1]
+            row -= 1
+            col -= 1
+        elif v_drop_i + HYPHEN_COST == v:      
+            backtrack_dna_sequence_x += "-"
+            backtrack_dna_sequence_y += dna_sequence_y[row-1]
+            row -= 1
+        else: # v_drop_j
+            backtrack_dna_sequence_x += dna_sequence_x[col-1]
+            backtrack_dna_sequence_y += "-"
+            col -= 1
+    
+    return backtrack_dna_sequence_x[::-1], backtrack_dna_sequence_y[::-1]
+
+def initiate_solve(dna_sequence_x, dna_sequence_y):
+    if dna_sequence_x < dna_sequence_y: 
+        return solve(dna_sequence_y, dna_sequence_x) 
+    return solve(dna_sequence_x, dna_sequence_y)
+
+def load_dna_data(data):
+    data = data.split(">")
+    dna_map = {}
+
     for i in range(1, len(data)):
         dna = data[i].split("\n")
-        dnaMap[dna[0].strip()] = "".join(dna[1:])
-    
-    # To-do: Change format of print
+        key = dna[0].split()[0].strip()
+        dna_map[key] = "".join(dna[1:])
+
+    return dna_map
+
+def solve_and_print_dna_map(dna_map):
     seen_keys = []
-    for i_key in dnaMap:
-        for j_key in dnaMap:
-            if i_key == j_key or (i_key in seen_keys) or (j_key in seen_keys):
+    for i_key in dna_map:
+        for j_key in dna_map:
+            if i_key == j_key or (j_key in seen_keys):
                continue
             else:
-                result = initiate_solve(dnaMap[i_key], dnaMap[j_key])
-                print(dnaMap[i_key] + "--" + dnaMap[j_key]+ ": " + str(result[0]))
-                print(result[1])
-        
+                # initiate_solve returns a tuple - (match_score,(backtrack_x,backtrack_y))
+                alignment_result = initiate_solve(dna_map[i_key], dna_map[j_key])
+                print(f"{i_key}--{j_key}: {str(alignment_result[0])}")
+                print(f"{alignment_result[1][1]}\n{alignment_result[1][0]}")
         seen_keys.append(i_key)
 
 def load_blosum():
@@ -64,86 +125,7 @@ def blosum_cost(x,y):
     return blosum[get_key_index(x)][get_key_index(y)]
 
 def get_key_index(key):
-    k = keys.index(key)
-    return k
-
-def pretty_print_2D_array(A):
-    for i in range(len(A)):
-        for j in range(len(A[i])):
-            print(A[i][j], end=" ")
-        print()
-
-def print_2D_array_with_labels(A, x, y):
-    print(" ", end=" ")
-    print("*", end=" ")
-    for i in range(len(x)):
-        print(x[i], end=" ")
-    print()
-    for i in range(len(A)):
-        print(y[i], end="  ")
-        for j in range(len(A[i])):
-            print(A[i][j], end=" ")
-        print()
-
-def initiate_solve(x, y):
-    if x < y: 
-        return solve(y,x) 
-    else:
-        return solve(x,y)
-
-def solve(x, y):
-    A = [[0 for _ in range(len(x)+1)] for _ in range(len(y)+1)]
-    # B = [[0]*len(x)] * len(y)
-    for i in range(len(y)+1):
-        A[i][0] = HYPHEN_COST * i
-
-    for j in range(len(x)+1):
-        A[0][j] = HYPHEN_COST * j
-
-    for row in range(1, len(y)+1):
-        for col in range(1, len(x)+1):
-            take   = blosum_cost(y[row-1], x[col-1]) + A[row-1][col-1]
-            drop_i = HYPHEN_COST + A[row-1][col]
-            drop_j = HYPHEN_COST + A[row][col-1]
-            A[row][col] = max(take, drop_i, drop_j)
-    
-    # print("\nAfter solve:")
-    # pretty_print_2D_array(A)
-
-    return A[len(y)][len(x)], backtrack(A, x, y)
-
-def backtrack(A, x, y):
-    global HYPHEN_COST
-
-    backtrack_x = ""
-    backtrack_y = ""
-
-    row = len(y)
-    col = len(x)
-
-    while (row > 0 or col > 0):
-
-        v = A[row][col]
-        v_take = A[row-1][col-1]
-        v_drop_i = A[row-1][col]
-        
-        if blosum_cost(y[row-1], x[col-1]) + v_take == v:
-            backtrack_x += x[col-1]
-            backtrack_y += y[row-1]
-            row -= 1
-            col -= 1
-        elif v_drop_i + HYPHEN_COST == v:      
-            backtrack_x += "-"
-            backtrack_y += y[row-1]
-            row -= 1
-        else: # v_drop_j
-            backtrack_x += x[col-1]
-            backtrack_y += "-"
-            col -= 1
-    backtrack_x_rev = backtrack_x[::-1]
-    backtrack_y_rev = backtrack_y[::-1]
-
-    return backtrack_x_rev, backtrack_y_rev
+    return keys.index(key)
 
 if __name__ == "__main__":
     main()
