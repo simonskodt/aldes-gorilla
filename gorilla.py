@@ -70,8 +70,8 @@ def backtrack(alignment, dna_sequence_x, dna_sequence_y):
 
 def initiate_solve(dna_sequence_x, dna_sequence_y):
     if dna_sequence_x < dna_sequence_y: 
-        return solve(dna_sequence_y, dna_sequence_x) 
-    return solve(dna_sequence_x, dna_sequence_y)
+        return (solve(dna_sequence_y, dna_sequence_x), True)
+    return (solve(dna_sequence_x, dna_sequence_y), False)
 
 def load_dna_data(data):
     data = data.split(">")
@@ -92,9 +92,12 @@ def solve_and_print_dna_map(dna_map):
                continue
             else:
                 # initiate_solve returns a tuple - (match_score,(backtrack_x,backtrack_y))
-                alignment_result = initiate_solve(dna_map[i_key], dna_map[j_key])
+                (alignment_result, reversed) = initiate_solve(dna_map[i_key], dna_map[j_key])
                 print(f"{i_key}--{j_key}: {str(alignment_result[0])}")
-                print(f"{alignment_result[1][1]}\n{alignment_result[1][0]}")
+                if reversed:
+                    print(f"{alignment_result[1][1]}\n{alignment_result[1][0]}")
+                else:
+                    print(f"{alignment_result[1][0]}\n{alignment_result[1][1]}")
         seen_keys.append(i_key)
 
 def load_blosum():
